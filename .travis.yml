@@ -9,6 +9,17 @@ branches:
     - master
     - /^issue-.*$/
 
+cache:
+  directories:
+    - vendor
+    - $HOME/.composer/cache
+
+
 install:
-  - composer global require fxp/composer-asset-plugin:1.0.0-beta4
-  - composer install
+  - travis_retry composer self-update && composer --version
+  - travis_retry composer global require "fxp/composer-asset-plugin:1.0.0"
+  - export PATH="$HOME/.composer/vendor/bin:$PATH"
+  - travis_retry composer install --prefer-dist --no-interaction
+
+script:
+  - codecept run
