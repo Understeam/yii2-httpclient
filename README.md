@@ -1,5 +1,7 @@
 # Yii2 HTTP client
 
+[![Build Status](https://travis-ci.org/Understeam/yii2-httpclient.svg?branch=master)](https://travis-ci.org/Understeam/yii2-httpclient)
+
 ## Configuration
 
 Add this lines to your config file:
