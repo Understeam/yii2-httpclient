@@ -1,0 +1,26 @@
+{
+  "name": "understeam/yii2-httpclient",
+  "description": "Yii2 http client implementation based on Guzzle library",
+  "type": "extension",
+  "license": "GPL-v3",
+  "support": {
+    "issues": "https://github.com/understeam/yii2-httpclient/issues",
+    "source": "https://github.com/understeam/yii2-httpclient"
+  },
+  "minimum-stability": "stable",
+  "require": {
+    "php": ">=5.4.0",
+    "yiisoft/yii2": ">=2.0.0",
+    "guzzlehttp/guzzle": "~5.2.0"
+  },
+  "require-dev": {
+    "codeception/codeception": "2.0.11",
+    "codeception/verify": "0.2.7",
+    "codeception/specify": "0.4.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "understeam\\httpclient\\": ""
+    }
+  }
+}
