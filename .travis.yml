@@ -1,27 +1,24 @@
 language: php
-
 php:
-  - 5.4
-  - 5.5
-  - 5.6
-  - hhvm
-
+- 5.4
+- 5.5
+- 5.6
+- hhvm
 branches:
   only:
-    - master
-    - /^issue-.*$/
-
+  - master
+  - "/^issue-.*$/"
 cache:
   directories:
-    - vendor
-    - $HOME/.composer/cache
-
-
+  - vendor
+  - "$HOME/.composer/cache"
 install:
-  - travis_retry composer self-update && composer --version
-  - travis_retry composer global require "fxp/composer-asset-plugin:1.0.0"
-  - export PATH="$HOME/.composer/vendor/bin:$PATH"
-  - travis_retry composer install --prefer-dist --no-interaction
-
+- travis_retry composer self-update && composer --version
+- travis_retry composer global require "fxp/composer-asset-plugin:1.0.0"
+- export PATH="$HOME/.composer/vendor/bin:$PATH"
+- travis_retry composer install --prefer-dist --no-interaction
 script:
-  - vendor/bin/codecept run
+- vendor/bin/codecept run
+notifications:
+  slack:
+    secure: P0VEY2VzSc+ozF2BImmbxfpaXV/jeE3jw4Jn4iaWAKUgDlUvv+xFMcwNMZdFn3kY2Ehwf/Eo90vhPRO3m/t3Jre6FGsVLrA/EZaJejBzelxhUVcOoPEB+CZLUxTdQEN8DD17pCp+RgVn7L1cK6pUceTHs4U0JlVeH2NMaFxAqqQ=
