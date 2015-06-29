@@ -30,7 +30,7 @@ class Client extends Component
     /**
      * @var array|ClientInterface GuzzleHttp config and instance
      */
-    public $client = "\\GuzzleHttp\\Client";
+    public $client = [];
 
     /**
      * Returns GuzzleHttp client
@@ -38,8 +38,13 @@ class Client extends Component
      */
     public function getClient()
     {
-        if (!is_object($this->client)) {
-            $this->client = Yii::createObject($this->client);
+        if(is_array($this->client))  {
+            if(!isset($this->client['class'])) {
+                $this->client['class'] = "\\GuzzleHttp\\Client";
+            }
+            $class = $this->client['class'];
+            unset($this->client['class']);
+            $this->client = new $class($this->client);
         }
         return $this->client;
     }
