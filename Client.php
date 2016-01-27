@@ -14,6 +14,7 @@ use GuzzleHttp\Message\ResponseInterface;
 use InvalidArgumentException;
 use Yii;
 use yii\base\Component;
+use yii\helpers\ArrayHelper;
 use GuzzleHttp\ClientInterface;
 
 /**
@@ -31,6 +32,8 @@ class Client extends Component
      * @var array|ClientInterface GuzzleHttp config and instance
      */
     public $client = [];
+
+    public $requestOptions = [];
 
     /**
      * Returns GuzzleHttp client
@@ -80,6 +83,7 @@ class Client extends Component
     {
         $format = !isset($options['format']) || $options['format'];
         unset($options['format']);
+        $options = ArrayHelper::merge($this->requestOptions, $options);
         try {
             $request = $this->getClient()->createRequest($method, $url, $options);
             $event = new Event([
