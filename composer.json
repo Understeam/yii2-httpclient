@@ -9,12 +9,12 @@
   },
   "minimum-stability": "stable",
   "require": {
-    "php": ">=5.4.0",
+    "php": ">=5.5.0",
     "yiisoft/yii2": ">=2.0.0",
-    "guzzlehttp/guzzle": "~5.2.0"
+    "guzzlehttp/guzzle": "~6.1.0"
   },
   "require-dev": {
-    "codeception/codeception": "2.0.11",
+    "codeception/codeception": "2.1.2",
     "codeception/verify": "0.2.7",
     "codeception/specify": "0.4.1"
   },
