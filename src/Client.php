@@ -162,6 +162,7 @@ class Client extends Component
                 } catch (InvalidParamException $e) {
                     return false;
                 }
+            case 'application/xml':
             case 'application/atom+xml':
             case 'application/soap+xml':
             case 'application/xhtml+xml':
@@ -216,7 +217,10 @@ class Client extends Component
         $this->prepareOptions($options);
         $response = $this->getClient()->send($request, $options);
         $this->afterRequest($response);
-        if ($detectMimeType || $this->detectMimeType) {
+        if ($detectMimeType === null) {
+            $detectMimeType = $this->detectMimeType;
+        }
+        if ($detectMimeType) {
             return $this->formatResponse($response);
         } else {
             return $response;

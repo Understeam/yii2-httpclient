@@ -100,6 +100,15 @@ class ClientTest extends \Codeception\TestCase\Test
         expect("Downloaded content 'form' is valid", $data['form'])->same($attributes);
     }
 
+    public function testXml()
+    {
+        $url = "http://httpbin.org/xml";
+        /** @var \SimpleXMLElement $xml */
+        $xml = $this->getClient()->get($url);
+        expect("Downloaded content is SimpleXmlElement object", $xml)->isInstanceOf('SimpleXmlElement');
+        expect("Xml has elements", $xml->count())->greaterOrEquals(1);
+    }
+
     /**
      * @return Client
      */
