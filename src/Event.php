@@ -7,7 +7,7 @@
 
 namespace understeam\httpclient;
 
-use Yii;
+use Psr\Http\Message\MessageInterface;
 
 /**
  * Class Event TODO: Write class description
@@ -18,8 +18,10 @@ class Event extends \yii\base\Event
 {
 
     /**
-     * @var \GuzzleHttp\Message\RequestInterface|\GuzzleHttp\Message\ResponseInterface
+     * @var MessageInterface
      */
     public $message;
+
+    public $isValid = true;
 
 }

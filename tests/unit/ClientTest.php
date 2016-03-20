@@ -3,8 +3,8 @@
 namespace Codeception\TestCase;
 
 use understeam\httpclient\Client;
-use understeam\httpclient\Event;
 use Yii;
+use yii\base\DynamicModel;
 
 class ClientTest extends \Codeception\TestCase\Test
 {
@@ -15,81 +15,89 @@ class ClientTest extends \Codeception\TestCase\Test
 
     public function testConfig()
     {
-        expect("Component is configured", $this->getClient())->notNull();
+        expect("Component is configured", $this->getClient() instanceof Client)->true();
     }
 
-    public function testBeforeRequestEvent()
+    public function testHtmlRequest()
     {
-        $eventTriggered = false;
-        $client = $this->getClient();
-        $client->on(Client::EVENT_BEFORE_REQUEST, function (Event $event) use (&$eventTriggered) {
-            expect("Event message is not null", $event->message)->notNull();
-            expect("Event message is Request object", get_class($event->message))->equals("GuzzleHttp\\Message\\Request");
-
-            $eventTriggered = true;
-        });
-        $client->request("http://httpbin.org/");
-        expect("Event is triggered", $eventTriggered)->true();
+        $html = $this->getClient()->get('http://httpbin.org/html');
+        expect("Downloaded content is string", is_string($html))->true();
+        $response = $this->getClient()->get('http://httpbin.org/html', [], false);
+        expect("Response is ResponseInterface object", $response)->isInstanceOf('Psr\Http\Message\ResponseInterface');
+        expect("Content type is text/html", $response->getHeader('content-type'))->same(['text/html; charset=utf-8']);
     }
 
-    public function testBeforeRequestInlineEvent()
+    public function testMethodRequests()
     {
-        $eventTriggered = false;
-        $client = $this->getClient();
-        $client->request("http://httpbin.org/", 'GET', function (Event $event) use (&$eventTriggered) {
-            expect("Event message is not null", $event->message)->notNull();
-            expect("Event message is Request object", get_class($event->message))->equals("GuzzleHttp\\Message\\Request");
-
-            $eventTriggered = true;
-        });
-        expect("Event is triggered", $eventTriggered)->true();
+        $methods = [
+            'post',
+            'put',
+            'delete',
+        ];
+        foreach ($methods as $method) {
+            $url = "http://httpbin.org/{$method}";
+            $json = $this->getClient()->{$method}($url);
+            expect("Downloaded content is array", is_array($json))->true();
+            $response = $this->getClient()->{$method}($url, null, [], false);
+            expect("Response is ResponseInterface object", $response)->isInstanceOf('Psr\Http\Message\ResponseInterface');
+            expect("Content type is application/json", $response->getHeader('content-type'))->same(['application/json']);
+            $responseData = $this->getClient()->formatResponse($response);
+            expect("Downloaded content is array", is_array($responseData))->true();
+        }
     }
 
-    public function testAfterRequestInlineEvent()
+    public function testMethodsAsyncRequests()
     {
-        $eventTriggered = false;
-        $client = $this->getClient();
-        $client->on(Client::EVENT_AFTER_REQUEST, function (Event $event) use (&$eventTriggered) {
-            expect("Event message is not null", $event->message)->notNull();
-            expect("Event message is Response object", get_class($event->message))->equals("GuzzleHttp\\Message\\Response");
-
-            $eventTriggered = true;
-        });
-        $client->request("http://httpbin.org/");
-        expect("Event is triggered", $eventTriggered)->true();
-
-        $eventTriggered = false;
-        $client->on(Client::EVENT_AFTER_REQUEST, function (Event $event) use (&$eventTriggered) {
-            $eventTriggered = true;
-        });
-        $client->request("http://httpbin.org/", 'GET', function (Event $event) {
-            return false; //stop request
-        });
-        expect("Event is not triggered", $eventTriggered)->false();
+        $methods = [
+            'get',
+            'post',
+            'put',
+            'delete',
+        ];
+        foreach ($methods as $method) {
+            $url = "http://httpbin.org/{$method}";
+            $promise = $this->getClient()->{$method . "Async"}($url);
+            expect("Response is PromiseInterface object", $promise)->isInstanceOf('GuzzleHttp\Promise\PromiseInterface');
+            $response = $promise->wait();
+            expect("Response is ResponseInterface object", $response)->isInstanceOf('Psr\Http\Message\ResponseInterface');
+            expect("Content type is application/json", $response->getHeader('content-type'))->same(['application/json']);
+        }
     }
 
-    public function testXmlFormatting()
+    public function testHeadersRequest()
     {
-        $client = $this->getClient();
-        $result = $client->request('http://httpbin.org/xml');
-        expect("Result is not false", $result)->notEquals(false);
-        expect("Result is instance of SimpleXMLElement", get_class($result))->equals("SimpleXMLElement");
+        $url = "http://httpbin.org/headers";
+        $data = $this->getClient()->get($url, [
+            'headers' => [
+                'X-Test-Header' => 'test-header',
+            ]
+        ]);
+        expect("Downloaded content has 'headers' key", $data)->hasKey('headers');
+        expect("Downloaded content has 'headers.X-Test-Header' key", $data['headers'])->hasKey('X-Test-Header');
     }
 
-    public function testJsonFormatting()
+    public function testObjectRequest()
     {
-        $client = $this->getClient();
-        $result = $client->request('http://httpbin.org/ip');
-        expect("Result is not false", $result)->notEquals(false);
-        expect("Result is array", is_array($result))->true();
+        $url = "http://httpbin.org/post";
+        $attributes = [
+            'field1' => '1',
+            'field2' => '2',
+        ];
+        $data = $this->getClient()->post($url, new DynamicModel(['field1', 'field2'], $attributes));
+        expect("Downloaded content has 'json' key", $data)->hasKey('json');
+        expect("Downloaded content 'json' is valid", $data['json'])->same($attributes);
     }
 
-    public function testRawFormatting()
+    public function testFormRequest()
     {
-        $client = $this->getClient();
-        $result = $client->request('http://httpbin.org/html');
-        expect("Result is not false", $result)->notEquals(false);
-        expect("Result is string", gettype($result))->equals('string');
+        $url = "http://httpbin.org/post";
+        $attributes = [
+            'field1' => '1',
+            'field2' => '2',
+        ];
+        $data = $this->getClient()->post($url, $attributes);
+        expect("Downloaded content has 'form' key", $data)->hasKey('form');
+        expect("Downloaded content 'form' is valid", $data['form'])->same($attributes);
     }
 
     /**

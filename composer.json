@@ -11,16 +11,16 @@
   "require": {
     "php": ">=5.4.0",
     "yiisoft/yii2": ">=2.0.0",
-    "guzzlehttp/guzzle": "~5.2.0"
+    "guzzlehttp/guzzle": "~6.1"
   },
   "require-dev": {
-    "codeception/codeception": "2.0.11",
-    "codeception/verify": "0.2.7",
-    "codeception/specify": "0.4.1"
+    "codeception/codeception": "~2.1",
+    "codeception/verify": "~0.3",
+    "codeception/specify": "~0.4"
   },
   "autoload": {
     "psr-4": {
-      "understeam\\httpclient\\": ""
+      "understeam\\httpclient\\": "src"
     }
   }
 }
