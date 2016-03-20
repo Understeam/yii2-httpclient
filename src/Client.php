@@ -8,7 +8,7 @@
 namespace understeam\httpclient;
 
 use GuzzleHttp\Psr7\Request;
-use InvalidArgumentException;
+use GuzzleHttp\ClientInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Yii;
@@ -16,7 +16,6 @@ use yii\base\Arrayable;
 use yii\base\Component;
 use yii\base\InvalidParamException;
 use yii\helpers\ArrayHelper;
-use GuzzleHttp\ClientInterface;
 use yii\helpers\Json;
 
 /**
@@ -24,17 +23,17 @@ use yii\helpers\Json;
  *
  * Following shortcuts available via magic __call method:
  *
- * @method get($url, $options = [], $format = true) makes GET request to given url. see [[request()]] for arguments explanation
+ * @method get($url, $options = [], $detectMimeType = null) makes GET request to given url. see [[request()]] for arguments explanation
  * @method getAsync($url, $options = []) makes asynchronous GET request to given url. see [[requestAsync()]] for arguments explanation
- * @method post($url, $body = null, $options = [], $format = true) makes POST request to given url. see [[request()]] for arguments explanation
+ * @method post($url, $body = null, $options = [], $detectMimeType = null) makes POST request to given url. see [[request()]] for arguments explanation
  * @method postAsync($url, $body = null, $options = []) makes asynchronous POST request to given url. see [[requestAsync()]] for arguments explanation
- * @method put($url, $body = null, $options = [], $format = true) makes PUT request to given url. see [[request()]] for arguments explanation
+ * @method put($url, $body = null, $options = [], $detectMimeType = null) makes PUT request to given url. see [[request()]] for arguments explanation
  * @method putAsync($url, $body = null, $options = []) makes asynchronous PUT request to given url. see [[requestAsync()]] for arguments explanation
- * @method delete($url, $body = null, $options = [], $format = true) makes DELETE request to given url. see [[request()]] for arguments explanation
+ * @method delete($url, $body = null, $options = [], $detectMimeType = null) makes DELETE request to given url. see [[request()]] for arguments explanation
  * @method deleteAsync($url, $body = null, $options = []) makes asynchronous DELETE request to given url. see [[requestAsync()]] for arguments explanation
- * @method options($url, $body = null, $options = [], $format = true) makes OPTIONS request to given url. see [[request()]] for arguments explanation
+ * @method options($url, $body = null, $options = [], $detectMimeType = null) makes OPTIONS request to given url. see [[request()]] for arguments explanation
  * @method optionsAsync($url, $body = null, $options = []) makes asynchronous OPTIONS request to given url. see [[requestAsync()]] for arguments explanation
- * @method head($url, $body = null, $options = [], $format = true) makes HEAD request to given url. see [[request()]] for arguments explanation
+ * @method head($url, $body = null, $options = [], $detectMimeType = null) makes HEAD request to given url. see [[request()]] for arguments explanation
  * @method headAsync($url, $body = null, $options = []) makes asynchronous HEAD request to given url. see [[requestAsync()]] for arguments explanation
  *
  * You can make any other HTTP request in same manner
@@ -58,6 +57,8 @@ class Client extends Component
     public $baseUrl;
 
     public $requestHeaders = [];
+
+    public $detectMimeType = true;
 
     public $httpVersion = '1.1';
 
@@ -92,13 +93,13 @@ class Client extends Component
         if ($methodName === 'GET') {
             $body = null;
             $options = isset($args[1]) ? $args[1] : [];
-            $format = isset($args[2]) ? $args[2] : true;
+            $detectMimeType = isset($args[2]) ? $args[2] : true;
         } else {
             $body = isset($args[1]) ? $args[1] : null;
             $options = isset($args[2]) ? $args[2] : [];
-            $format = isset($args[3]) ? $args[3] : true;
+            $detectMimeType = isset($args[3]) ? $args[3] : true;
         }
-        return $this->$request($methodName, $url, $body, $options, $format);
+        return $this->$request($methodName, $url, $body, $options, $detectMimeType);
     }
 
     public static function serialize($body, &$options)
@@ -158,7 +159,7 @@ class Client extends Component
             case 'application/json':
                 try {
                     return Json::decode((string)$response->getBody());
-                } catch (InvalidArgumentException $e) {
+                } catch (InvalidParamException $e) {
                     return false;
                 }
             case 'application/atom+xml':
@@ -177,11 +178,11 @@ class Client extends Component
         return new Request($method, $url, ArrayHelper::merge($this->requestHeaders, $headers), $body, $this->httpVersion);
     }
 
-    public function request($method, $url, $body = null, $options = [], $format = true)
+    public function request($method, $url, $body = null, $options = [], $detectMimeType = null)
     {
         $body = $this->prepareBody($body, $options);
         $request = $this->createRequest($method, $url, $body);
-        return $this->send($request, $options, $format);
+        return $this->send($request, $options, $detectMimeType);
     }
 
     public function requestAsync($method, $url, $body = null, $options = [])
@@ -207,7 +208,7 @@ class Client extends Component
         ]));
     }
 
-    public function send(RequestInterface $request, $options = [], $format = true)
+    public function send(RequestInterface $request, $options = [], $detectMimeType = null)
     {
         if (!$this->beforeRequest($request)) {
             return false;
@@ -215,7 +216,7 @@ class Client extends Component
         $this->prepareOptions($options);
         $response = $this->getClient()->send($request, $options);
         $this->afterRequest($response);
-        if ($format) {
+        if ($detectMimeType || $this->detectMimeType) {
             return $this->formatResponse($response);
         } else {
             return $response;

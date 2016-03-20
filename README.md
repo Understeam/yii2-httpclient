@@ -11,6 +11,13 @@ Add this lines to your config file:
 'components' => [
 	'httpclient' => [
 		'class' =>'understeam\httpclient\Client',
+		'detectMimeType' => true, // automatically transform request to data according to response Content-Type header
+		'requestOptions' => [
+		    // see guzzle request options documentation
+		],
+		'requestHeaders' => [
+		    // specify global request headers (can be overrided with $options on making request)
+		],
 	],
 ],
 ...
@@ -18,41 +25,103 @@ Add this lines to your config file:
 
 ## Basic usage
 
-Performing HTTP GET request with format detection:
+Performing HTTP GET request with mime type detection:
 ```php
 // Result is html text
-$text = Yii::$app->httpclient->request('http://httpbin.org');
+$text = Yii::$app->httpclient->get('http://httpbin.org/html');
 
 // Result is SimpleXMLElement containing parsed XML
-$xml = Yii::$app->httpclient->request('http://httpbin.org/xml');
+$xml = Yii::$app->httpclient->get('http://httpbin.org/xml');
 
 // Result is parsed JSON array
-$json = Yii::$app->httpclient->request('http://httpbin.org/ip');
+$json = Yii::$app->httpclient->get('http://httpbin.org/get');
 
 ```
 
-To ignore response headers and content type detection pass `['format' => false]` to the `$options` argument:
-```php
-// Result is xml text
-$text = Yii::$app->httpclient->request('http://httpbin.org/xml', 'GET', null, ['format' => false]);
-```
-
-To add post fields, uploading files and other stuff use third function parameter `$beforeRequest`:
+You can disable this behavior by specifying `$detectMimeType` option to whole component or single call
 
 ```php
-Yii::$app->httpclient->request($slackHookUrl, 'POST', function(Event $event) use ($payload) {
-	// GuzzleHttp\Message\Request object
-	$request = $event->message;
-	$post = new PostBody();
-	$post->setField('payload', $payload);
-	$request->setBody($post);
-	if($payload === null) {
-		// This statement stops request processing
-		return false;
-	}
-});
+// Result is Guzzle `Response` object
+$text = Yii::$app->httpclient->get('http://httpbin.org/xml', [], false);
+
 ```
 
-Also Client triggers 2 events: `beforeRequest` and `afterRequest`. `beforeRequest` acts the same as function callback and `afterRequest` has `GuzzleHttp\Message\Response` as `$message` property.
+Make request with custom options:
 
-You can see some code in tests. Good luck.
+```php
+$text = Yii::$app->httpclient->get('http://httpbin.org/xml', [
+    'proxy' => 'tcp://localhost:8125'
+]);
+```
+
+Read more about this options in [Guzzle 6 documentation](http://guzzle.readthedocs.org/en/latest/request-options.html)
+
+## HTTP methods
+
+You can make request with several ways:
+
+1. Call shortcut method (`get()`, `post()`, `put()`, `delete()`, etc.)
+2. Call `request()` method
+
+All shortcut methods has the same signature except `get()`:
+
+```php
+// Sinchronous GET request
+Yii::$app->httpclient->get(
+    $url, // URL
+    [], // Options
+    true // Detect Mime Type?
+);
+
+// Sinchronous POST (and others) request
+Yii::$app->httpclient->post(
+    $url, // URL
+    $body, // Body
+    [], // Options
+    true // Detect Mime Type?
+);
+
+// Asinchronous GET request
+Yii::$app->httpclient->getAsync(
+    $url, // URL
+    [] // Options
+);
+
+// Asinchronous POST (and others) request
+Yii::$app->httpclient->postAsync(
+    $url, // URL
+    $body, // Body
+    [] // Options
+);
+
+```
+
+> __NOTE__: you still can make a GET request with body via `request()` function
+
+## Asynchronous calls
+
+To make an asynchronous request simly add `Async` to end of request method:
+
+```php
+// PromiseInterface
+$promise = Yii::$app->httpclient->postAsync('http://httpbin.org/post');
+```
+
+> __NOTE__: mime type detection doesn't supported for asynchronous calls
+
+Read more about asynchronous requests in [Guzzle 6 documentation](http://guzzle.readthedocs.org/en/latest/quickstart.html#async-requests)
+
+## Request body
+
+Types you can pass as a body of request:
+
+1. __Arrayable object__ (ActiveRecord, Model etc.) - will be encoded into JSON object
+2. __Array__ - will be sent as form request (x-form-urlencoded)
+
+Any other data passed as body will be sent into Guzzle without any transformations.
+
+Read more about request body in [Guzzle documentation](http://guzzle.readthedocs.org/en/latest/request-options.html#body)
+
+## Apendix
+
+Feel free to send feature requests and fix bugs with Pull Requests
