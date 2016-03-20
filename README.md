@@ -107,7 +107,7 @@ To make an asynchronous request simly add `Async` to end of request method:
 $promise = Yii::$app->httpclient->postAsync('http://httpbin.org/post');
 ```
 
-> __NOTE__: mime type detection doesn't supported for asynchronous calls
+> __NOTE__: mime type detection is not supported for asynchronous calls
 
 Read more about asynchronous requests in [Guzzle 6 documentation](http://guzzle.readthedocs.org/en/latest/quickstart.html#async-requests)
 
