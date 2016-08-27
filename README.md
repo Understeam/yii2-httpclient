@@ -75,14 +75,14 @@ You can make request with several ways:
 All shortcut methods has the same signature except `get()`:
 
 ```php
-// Sinchronous GET request
+// Synchronous GET request
 Yii::$app->httpclient->get(
     $url, // URL
     [], // Options
     true // Detect Mime Type?
 );
 
-// Sinchronous POST (and others) request
+// Synchronous POST (and others) request
 Yii::$app->httpclient->post(
     $url, // URL
     $body, // Body
@@ -90,13 +90,13 @@ Yii::$app->httpclient->post(
     true // Detect Mime Type?
 );
 
-// Asinchronous GET request
+// Asynchronous GET request
 Yii::$app->httpclient->getAsync(
     $url, // URL
     [] // Options
 );
 
-// Asinchronous POST (and others) request
+// Asynchronous POST (and others) request
 Yii::$app->httpclient->postAsync(
     $url, // URL
     $body, // Body
@@ -131,6 +131,6 @@ Any other data passed as body will be sent into Guzzle without any transformatio
 
 Read more about request body in [Guzzle documentation](http://guzzle.readthedocs.org/en/latest/request-options.html#body)
 
-## Apendix
+## Appendix
 
 Feel free to send feature requests and fix bugs with Pull Requests
